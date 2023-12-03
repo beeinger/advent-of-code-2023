@@ -31,11 +31,16 @@ fn main() {
     }
 
     {
-        use day_3::part_1;
+        use day_3::{part_1, part_2};
 
         println!(
             "Day 3, part 1 answer: {}",
-            part_1::sum_park_nums(&part_1::get_input())
+            part_1::sum_part_nums(&part_1::get_input())
+        );
+
+        println!(
+            "Day 3, part 2 answer: {}",
+            part_2::sum_gear_ratios(&part_1::get_input())
         );
     }
 }

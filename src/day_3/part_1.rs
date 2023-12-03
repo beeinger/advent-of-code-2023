@@ -1,22 +1,28 @@
 use std::{
     fs,
+    sync::OnceLock,
     sync::{Arc, Mutex},
 };
 
 use rayon::prelude::*;
 
-pub struct Number {
+#[derive(Clone, Debug)]
+pub struct Coords {
     pub value: Vec<char>,
     /// (\[x_start, x_end], y)
     pub coords: ([u32; 2], u32),
+    adjacent_coords: OnceLock<Vec<(u32, u32)>>,
+    pub potential_gears: Vec<(u32, u32)>,
 }
 
-impl Number {
+impl Coords {
     pub fn new(value: Vec<&char>, coords: (u32, u32)) -> Self {
         let length = value.len() as u32;
         Self {
             value: value.into_iter().copied().collect(),
             coords: ([coords.0, coords.0 + (length - 1)], coords.1),
+            adjacent_coords: OnceLock::new(),
+            potential_gears: Vec::new(),
         }
     }
 
@@ -31,33 +37,35 @@ impl Number {
             .unwrap()
     }
 
-    pub fn get_adjacent_coords(&self, max_x: u32, max_y: u32) -> Vec<(u32, u32)> {
-        let mut coords = Vec::new();
+    pub fn get_adjacent_coords(&self, max_x: u32, max_y: u32) -> &Vec<(u32, u32)> {
+        self.adjacent_coords.get_or_init(|| {
+            let mut coords = Vec::new();
 
-        for y in self.coords.1 as i32 - 1..=self.coords.1 as i32 + 1 {
-            for x in self.coords.0[0] as i32 - 1..=self.coords.0[1] as i32 + 1 {
-                if y < 0 || x < 0 {
-                    continue;
-                };
+            for y in self.coords.1 as i32 - 1..=self.coords.1 as i32 + 1 {
+                for x in self.coords.0[0] as i32 - 1..=self.coords.0[1] as i32 + 1 {
+                    if y < 0 || x < 0 {
+                        continue;
+                    };
 
-                let x = x as u32;
-                let y = y as u32;
+                    let x = x as u32;
+                    let y = y as u32;
 
-                if (x > max_x || y > max_y)
-                    || (y == self.coords.1 && (self.coords.0[0] <= x && x <= self.coords.0[1]))
-                {
-                    continue;
+                    if (x > max_x || y > max_y)
+                        || (y == self.coords.1 && (self.coords.0[0] <= x && x <= self.coords.0[1]))
+                    {
+                        continue;
+                    }
+
+                    coords.push((x, y));
                 }
-
-                coords.push((x, y));
             }
-        }
 
-        coords
+            coords
+        })
     }
 }
 
-pub fn sum_park_nums(input: &str) -> u32 {
+pub fn sum_part_nums(input: &str) -> u32 {
     let input: Vec<Vec<char>> = input
         .par_split('\n')
         .into_par_iter()
@@ -87,7 +95,7 @@ pub fn sum_park_nums(input: &str) -> u32 {
                 value.push(next_char);
             }
 
-            let number = Number::new(value, coords);
+            let number = Coords::new(value, coords);
             let adjacent_coords = number.get_adjacent_coords(max_x, max_y);
 
             let is_part_number = adjacent_coords.par_iter().any(|(x, y)| {
@@ -132,7 +140,7 @@ mod tests {
 
     #[test]
     fn test() {
-        assert_eq!(sum_park_nums(TEST), 4361);
+        assert_eq!(sum_part_nums(TEST), 4361);
     }
 
     #[test]
