@@ -8,3 +8,16 @@ edition = "2021"
 [dependencies]
 rayon = "1.8"
 regex = "1.10"
+criterion = "0.4"
+
+[[bench]]
+name = "day_1"
+harness = false
+
+[[bench]]
+name = "day_2"
+harness = false
+
+[[bench]]
+name = "day_3"
+harness = false
